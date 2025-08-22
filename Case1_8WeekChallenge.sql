@@ -85,3 +85,26 @@ INNER JOIN menu m
   ON a.product_id = m.product_id
 WHERE rnk = 1
 ORDER BY customer_id ASC;
+
+-- 7. Which item was purchased just before the customer became a member?
+WITH after_members AS (
+  SELECT
+    m.customer_id, 
+    s.product_id,
+    ROW_NUMBER() OVER (
+      PARTITION BY m.customer_id
+      ORDER BY s.order_date DESC) AS rnk
+  FROM members m
+  INNER JOIN sales s
+    ON m.customer_id = s.customer_id
+  WHERE s.order_date < m.join_date
+)
+
+SELECT 
+  customer_id, 
+  product_name 
+FROM after_members a
+INNER JOIN menu m
+  ON a.product_id = m.product_id
+WHERE rnk = 1
+
